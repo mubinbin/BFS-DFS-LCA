@@ -9,6 +9,9 @@ public class Graph{
     private static HashMap<String, ArrayList<String>> adjMap = new HashMap<String, ArrayList<String>>();
     private static ArrayList<String> visited = new ArrayList<String>();
 
+    private static ArrayList<String> eulerList = new ArrayList<String>();
+    private static ArrayList<Integer> depthList = new ArrayList<Integer>();
+
     public static void addEdge(String vertex1, String vertex2){
         if(adjMap.containsKey(vertex1)){
             ArrayList<String> nestedList = adjMap.get(vertex1);
@@ -23,6 +26,19 @@ public class Graph{
         }
 
         addEdge(vertex2, vertex1);
+    }
+
+    public static void addEdgeOneDirection(String vertex1, String vertex2){
+        if(adjMap.containsKey(vertex1)){
+            ArrayList<String> nestedList = adjMap.get(vertex1);
+            
+            if(nestedList.contains(vertex2)) return;
+            nestedList.add(vertex2);
+        }else{
+            ArrayList<String> nestedList = new ArrayList<String>();
+            nestedList.add(vertex2);
+            adjMap.put(vertex1, nestedList);
+        }
     }
 
     public static void showGraph() {
@@ -174,5 +190,69 @@ public class Graph{
 
         path = start+" -> "+ end + path;
         System.out.print(path +"\n");
+    }
+
+    public static void euler(String start){
+        
+        int currentDepth = 0;
+        eulerPrivate(start, eulerList, depthList, currentDepth);
+
+    }
+
+    private static void eulerPrivate(String start, ArrayList<String> eulerList, ArrayList<Integer> depthList, int currentDepth){
+        eulerList.add(start);
+        depthList.add(currentDepth);
+
+        if(!adjMap.containsKey(start)){
+            return;
+        }
+
+        ArrayList<String> nestedList = adjMap.get(start);
+
+
+        for (int i =0; i < nestedList.size(); i++) {
+            String element = nestedList.get(i);
+
+            if(i > 0){
+                eulerList.add(start);
+                depthList.add(currentDepth);
+            }
+            
+            if (i == nestedList.size()-1 && !adjMap.containsKey(element)){
+                eulerList.add(element);
+                depthList.add(currentDepth+1);
+                eulerList.add(start);
+                depthList.add(currentDepth);
+
+                return;
+            }
+                
+            eulerPrivate(element, eulerList, depthList, currentDepth+1);
+        }
+        eulerList.add(start);
+        depthList.add(currentDepth);
+    }
+    
+    public static String lca(String node1, String node2, String startNode){
+        if(node1.equals(node2)) return node1;
+
+
+
+        euler(startNode);
+        
+        int indexOfNode1 = eulerList.indexOf(node1) < eulerList.indexOf(node2)?  eulerList.indexOf(node1): eulerList.indexOf(node2);
+        int indexOfNode2 = eulerList.indexOf(node1) > eulerList.indexOf(node2)?  eulerList.indexOf(node1): eulerList.indexOf(node2);
+
+        int minDepthBetweenNode1AndNode2 = depthList.get(indexOfNode1);
+        int indexOfMinDepth = indexOfNode1;
+        for(int i = indexOfNode1; i <= indexOfNode2; i++){
+            if(depthList.get(i) < minDepthBetweenNode1AndNode2){
+                minDepthBetweenNode1AndNode2 = depthList.get(i);
+                indexOfMinDepth = i;
+            }
+        }
+
+        String lca = eulerList.get(indexOfMinDepth);
+        return lca;
     }
 }
